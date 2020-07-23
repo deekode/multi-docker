@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t deekode/react-test -f Dockerfile.dev .
+
+script:
+  - docker run -e CI=true deekode/react-test npm run test -- --coverage
+
+after_success:
+    - docker build -t deekode/multi-client ./client
+    - docker build -t deekode/multi-nginx ./nginx
+    - docker build -t deekode/multi-server ./server
+    - docker build -t deekode/multi-worker ./worker
+    # login to docker 
+    - echo "$DOCKER_PASSWORD"| docker login -u "$DOCKER_ID" --password-stdin
+    - docker push  deekode/multi-client
+    - docker push  deekode/multi-nginx
+    - docker push  deekode/multi-server
+    - docker push  deekode/multi-worker
+    
